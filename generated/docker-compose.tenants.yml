@@ -1,0 +1,235 @@
+services:
+  tenant-a-db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    networks: &id001
+    - airflow-platform-net
+  tenant-a-init:
+    image: apache/airflow:3.0.3
+    restart: 'no'
+    depends_on:
+    - tenant-a-db
+    - redis
+    environment: &id002
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@tenant-a-db/airflow
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@tenant-a-db/airflow
+      AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS: 'true'
+    command: bash -c 'airflow db migrate'
+    networks: *id001
+  tenant-a-api-server:
+    image: apache/airflow:3.0.3
+    command: api-server
+    restart: always
+    depends_on:
+    - tenant-a-init
+    environment: *id002
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.tenant-a.rule=Host(`tenant-a.localhost`)
+    - traefik.http.routers.tenant-a.entrypoints=web
+    - traefik.http.services.tenant-a.loadbalancer.server.port=8080
+    networks: *id001
+  tenant-a-scheduler:
+    image: apache/airflow:3.0.3
+    command: scheduler
+    restart: always
+    depends_on:
+    - tenant-a-init
+    environment: *id002
+    networks: *id001
+  tenant-a-triggerer:
+    image: apache/airflow:3.0.3
+    command: triggerer
+    restart: always
+    depends_on:
+    - tenant-a-init
+    environment: *id002
+    networks: *id001
+  tenant-a-dag-processor:
+    image: apache/airflow:3.0.3
+    command: dag-processor
+    restart: always
+    depends_on:
+    - tenant-a-init
+    environment: *id002
+    networks: *id001
+  tenant-a-worker-1:
+    image: apache/airflow:3.0.3
+    command: celery worker
+    restart: always
+    depends_on:
+    - tenant-a-init
+    environment: *id002
+    networks: *id001
+  tenant-b-db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    networks: &id003
+    - airflow-platform-net
+  tenant-b-init:
+    image: apache/airflow:3.0.3
+    restart: 'no'
+    depends_on:
+    - tenant-b-db
+    - redis
+    environment: &id004
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@tenant-b-db/airflow
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@tenant-b-db/airflow
+      AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/1
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS: 'true'
+    command: bash -c 'airflow db migrate'
+    networks: *id003
+  tenant-b-api-server:
+    image: apache/airflow:3.0.3
+    command: api-server
+    restart: always
+    depends_on:
+    - tenant-b-init
+    environment: *id004
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.tenant-b.rule=Host(`tenant-b.localhost`)
+    - traefik.http.routers.tenant-b.entrypoints=web
+    - traefik.http.services.tenant-b.loadbalancer.server.port=8080
+    networks: *id003
+  tenant-b-scheduler:
+    image: apache/airflow:3.0.3
+    command: scheduler
+    restart: always
+    depends_on:
+    - tenant-b-init
+    environment: *id004
+    networks: *id003
+  tenant-b-triggerer:
+    image: apache/airflow:3.0.3
+    command: triggerer
+    restart: always
+    depends_on:
+    - tenant-b-init
+    environment: *id004
+    networks: *id003
+  tenant-b-dag-processor:
+    image: apache/airflow:3.0.3
+    command: dag-processor
+    restart: always
+    depends_on:
+    - tenant-b-init
+    environment: *id004
+    networks: *id003
+  tenant-b-worker-1:
+    image: apache/airflow:3.0.3
+    command: celery worker
+    restart: always
+    depends_on:
+    - tenant-b-init
+    environment: *id004
+    networks: *id003
+  tenant-b-worker-2:
+    image: apache/airflow:3.0.3
+    command: celery worker
+    restart: always
+    depends_on:
+    - tenant-b-init
+    environment: *id004
+    networks: *id003
+  tenant-b-worker-3:
+    image: apache/airflow:3.0.3
+    command: celery worker
+    restart: always
+    depends_on:
+    - tenant-b-init
+    environment: *id004
+    networks: *id003
+  tenant-c-db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    networks: &id005
+    - airflow-platform-net
+  tenant-c-init:
+    image: apache/airflow:3.0.3
+    restart: 'no'
+    depends_on:
+    - tenant-c-db
+    - redis
+    environment: &id006
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@tenant-c-db/airflow
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@tenant-c-db/airflow
+      AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/2
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS: 'true'
+    command: bash -c 'airflow db migrate'
+    networks: *id005
+  tenant-c-api-server:
+    image: apache/airflow:3.0.3
+    command: api-server
+    restart: always
+    depends_on:
+    - tenant-c-init
+    environment: *id006
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.tenant-c.rule=Host(`tenant-c.localhost`)
+    - traefik.http.routers.tenant-c.entrypoints=web
+    - traefik.http.services.tenant-c.loadbalancer.server.port=8080
+    networks: *id005
+  tenant-c-scheduler:
+    image: apache/airflow:3.0.3
+    command: scheduler
+    restart: always
+    depends_on:
+    - tenant-c-init
+    environment: *id006
+    networks: *id005
+  tenant-c-triggerer:
+    image: apache/airflow:3.0.3
+    command: triggerer
+    restart: always
+    depends_on:
+    - tenant-c-init
+    environment: *id006
+    networks: *id005
+  tenant-c-dag-processor:
+    image: apache/airflow:3.0.3
+    command: dag-processor
+    restart: always
+    depends_on:
+    - tenant-c-init
+    environment: *id006
+    networks: *id005
+  tenant-c-worker-1:
+    image: apache/airflow:3.0.3
+    command: celery worker
+    restart: always
+    depends_on:
+    - tenant-c-init
+    environment: *id006
+    networks: *id005
+  tenant-c-worker-2:
+    image: apache/airflow:3.0.3
+    command: celery worker
+    restart: always
+    depends_on:
+    - tenant-c-init
+    environment: *id006
+    networks: *id005
+networks:
+  airflow-platform-net:
+    external: true
