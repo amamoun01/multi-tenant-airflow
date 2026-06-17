@@ -1,3 +1,4 @@
+---
 tenants:
   - name: tenant-a
     workers: 1
