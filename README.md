@@ -8,7 +8,7 @@ A lightweight, automated platform designed to spin up multiple completely isolat
 * **Database Engine:** A shared [PostgreSQL](https://www.postgresql.org/docs/) instance isolates tenant state workflows utilizing independent databases per tenant.
 * **Message Broker:** A single [Redis](https://redis.io/docs/latest/) container acts as the Celery task runner broker, leveraging independent database channels (`/0`, `/1`, `/2`) to keep queues distinct.
 
-![Architecture Diagram](https://github.com/multi-tenant-airflow/blob/main/assets/architecture.png)
+![Architecture Diagram](https://github.com/amamoun01/multi-tenant-airflow/blob/main/assets/architecture.png)
 
 ## 🚀 Quick Start
 
