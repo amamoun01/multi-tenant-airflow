@@ -1,0 +1,9 @@
+tenants:
+  - name: tenant-a
+    workers: 1
+
+  - name: tenant-b
+    workers: 3
+
+  - name: tenant-c
+    workers: 2

@@ -1,0 +1,32 @@
+# ============================================================
+# Run shared services for Airflow platform across all tenants.
+# ============================================================
+
+services:
+  redis:
+    image: redis:7
+    restart: always
+    networks:
+      - airflow-platform-net
+
+  traefik:
+    image: traefik:v3
+    restart: always
+    command:
+      - --api.dashboard=true
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - airflow-platform-net
+
+networks:
+  airflow-platform-net:
+    name: airflow-platform-net
+    driver: bridge
